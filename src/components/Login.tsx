@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import logo from "../assets/img/logo.png";
+import {
+  signUserStart,
+  signUserSuccess,
+  signUserFailure,
+} from "../redux/slice/Auth";
+import AuthService from "../service/Auth";
 import { Input } from "../ui";
-import { loginUserStart } from "../redux/slice/Auth";
+import { ValidationError } from "./Index";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -13,7 +21,15 @@ export default function Login() {
 
   function loginHandler(e) {
     e.preventDefault();
-    dispatch(loginUserStart());
+    dispatch(signUserStart());
+    const user = { email, password };
+    try {
+      const response = AuthService.userLogin(user);
+      dispatch(signUserSuccess(response.user));
+      navigate("/");
+    } catch (error) {
+      dispatch(signUserFailure(error.response.data.errors));
+    }
   }
 
   return (
@@ -22,6 +38,7 @@ export default function Login() {
         <form>
           <img className="mb-4" src={logo} alt="" width="72" height="72" />
           <h1 className="h3 mb-3 fw-normal">Please Login</h1>
+          <ValidationError />
           <Input setStage={setEmail} state={email} leble={"Email address"} />
           <Input
             setStage={setPassword}
